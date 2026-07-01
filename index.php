@@ -2,21 +2,21 @@
 
 class Taxi
 {
-    private int $passenger;
+    private int $passengerLocation;
     private array $cars;
 
-    public function __construct(int $passengerLocation, int $countTaxiCarsInPark, bool $isAllCarsBusy = false)
+    public function __construct(int $passengerLocation, int $countCarsInPark = 10)
     {
-        $this->passenger = $passengerLocation;
-        $this->cars = $this->getCars($countTaxiCarsInPark, $isAllCarsBusy);
+        $this->passengerLocation = $passengerLocation;
+        $this->cars = $this->getCars($countCarsInPark);
     }
 
-    private function getCars(int $countTaxiCarsInPark, bool $isAllCarsBusy = false): array
+    private function getCars(int $countCarsInPark): array
     {
         $cars = [];
 
-        for ($carId = 1; $carId <= $countTaxiCarsInPark; $carId++) {
-            $isCarFree = $isAllCarsBusy ? false : (bool) rand(0, 1);
+        for ($carId = 1; $carId <= $countCarsInPark; $carId++) {
+            $isCarFree = (bool) rand(0, 1);
             
             $cars[] = new TaxiCar($carId, rand(0, 1000), $isCarFree);
         }
@@ -26,40 +26,53 @@ class Taxi
 
     public function findCar(): void
     {
-        $carIdForPassenger = $this->getCarIdForPassenger();
-
-        $this->printCarsResult($carIdForPassenger);
+        $this->printCarsResult($this->getCarIdForPassenger());
     }
 
     private function getCarIdForPassenger(): ?int
     {
-        $carIdForPassenger = null;
-        $minDistance = PHP_INT_MAX;
+        $carForPassenger = null;
 
         foreach ($this->cars as $car) {
-            $distance = abs($this->passenger - $car->getPosition());
-            $car->setDistance($distance);
+            $distanceToPassenger = abs($this->passengerLocation - $car->getPosition());
+            $car->setDistanceToPassenger($distanceToPassenger);
 
             if (!$car->isFree()) {
                 continue;
             }
 
-            if ($distance < $minDistance) {
-                $minDistance = $distance;
-                $carIdForPassenger = $car->getId();
+            if (
+                $carForPassenger === null
+                || $car->getDistanceToPassenger() < $carForPassenger->getDistanceToPassenger()
+            ) {
+                $carForPassenger = $car;
             }
         }
 
-        return $carIdForPassenger;
+        $this->sortCarsByDistanceToPassenger();
+
+        if ($carForPassenger === null) {
+            return null;
+        }
+
+        return $carForPassenger->getId();
+    }
+
+    private function sortCarsByDistanceToPassenger(): void
+    {
+        usort($this->cars, function (TaxiCar $firstCar, TaxiCar $secondCar): int {
+            return ($firstCar->getDistanceToPassenger() <=> $secondCar->getDistanceToPassenger())
+                ?: ($firstCar->getId() <=> $secondCar->getId());
+        });
     }
 
     private function printCarsResult(?int $carIdForPassenger): void
     {
-        echo 'The passenger at ' . $this->passenger . 'km' . "\n\n";
+        echo 'The passenger at ' . $this->passengerLocation . 'km' . "\n\n";
 
         foreach ($this->cars as $car) {
             echo 'Taxi ' . $car->getId() . ' at ' . $car->getPosition() . 'km, ';
-            echo 'distance to the passenger ' . $car->getDistance() . 'km ';
+            echo 'distance to the passenger ' . $car->getDistanceToPassenger() . 'km ';
             echo $car->isFree() ? '(free)' : '(busy)';
             echo ($car->getId() === $carIdForPassenger) ? ' - this taxi is going' : '';
             echo "\n";
@@ -78,7 +91,7 @@ class TaxiCar
     private int $id;
     private int $position;
     private bool $isFree;
-    private ?int $distance = null;
+    private ?int $distanceToPassenger = null;
 
     public function __construct(int $id, int $position, bool $isFree)
     {
@@ -102,22 +115,22 @@ class TaxiCar
         return $this->isFree;
     }
 
-    public function getDistance(): ?int
+    public function getDistanceToPassenger(): ?int
     {
-        return $this->distance;
+        return $this->distanceToPassenger;
     }
 
-    public function setDistance(int $distance): void
+    public function setDistanceToPassenger(int $distanceToPassenger): void
     {
-        $this->distance = $distance;
+        $this->distanceToPassenger = $distanceToPassenger;
     }
 }
 
-$taxi = new Taxi(rand(0, 1000), 3, true);
+$taxi = new Taxi(rand(1, 1000), 3);
 $taxi->findCar();
 
-$taxi = new Taxi(rand(0, 1000), 6);
+$taxi = new Taxi(rand(1, 1000), 6);
 $taxi->findCar();
 
-$taxi = new Taxi(rand(0, 1000), 9);
+$taxi = new Taxi(rand(1, 1000));
 $taxi->findCar();

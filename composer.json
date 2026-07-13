@@ -1,0 +1,9 @@
+{
+  "name": "find-taxi/api",
+  "description": "Taxi dispatch API with ride sharing, ratings, and analytics",
+  "autoload": {
+    "psr-4": {
+      "Taxi\\": "src/"
+    }
+  }
+}

@@ -8,8 +8,6 @@ Everything runs over a REST API backed by plain JSON files — no database requi
 
 ## 💻 Interface Screenshots
 
-Here is dashbaord for find taxi:
-
 ![Find Taxi Dashboard](http://utmlink.tech/screenshot/find-taxi.png)
 
 ## 🛠️ Tech Stack
